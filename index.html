@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>لغة البرمجة Julia | عرض بحثي احترافي</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #070a14;
+      --panel: rgba(18, 22, 35, 0.75);
+      --panel-strong: rgba(12, 16, 25, 0.9);
+      --line: rgba(255,255,255,0.08);
+      --ink: #eef3ff;
+      --muted: #b9c2d7;
+      --purple: #8b5cf6;
+      --blue: #38bdf8;
+      --green: #34d399;
+      --red: #f87171;
+      --orange: #f59e0b;
+      --gold: #fbbf24;
+      --shadow: rgba(0,0,0,0.45);
+    }
+
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: 'Cairo', sans-serif;
+    }
+
+    body {
+      background:
+        radial-gradient(circle at 20% 10%, rgba(139, 92, 246, 0.18), transparent 24%),
+        radial-gradient(circle at 85% 20%, rgba(56, 189, 248, 0.15), transparent 28%),
+        linear-gradient(135deg, #040812 0%, #090d1a 35%, #070b12 100%);
+    }
+
+    .scene {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      perspective: 1600px;
+    }
+
+    #bg {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      display: block;
+      z-index: 0;
+      opacity: 0.95;
+    }
+
+    .slides {
+      position: absolute;
+      inset: 2.1vh 2vw;
+      z-index: 2;
+      display: grid;
+      place-items: center;
+      transform-style: preserve-3d;
+    }
+
+    .slide {
+      position: absolute;
+      width: min(1160px, 84vw);
+      min-height: min(720px, 78vh);
+      padding: clamp(1.5rem, 2vw, 2.4rem) clamp(1.5rem, 2.7vw, 3rem);
+      border-radius: 30px;
+      border: 1px solid var(--line);
+      background: linear-gradient(180deg, rgba(18,22,35,.80), rgba(8,11,20,.88));
+      box-shadow: 0 25px 60px rgba(0,0,0,0.45), inset 0 0 25px rgba(255,255,255,0.02);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      opacity: 0;
+      pointer-events: none;
+      transform: translate3d(0, 46px, -110px) rotateY(12deg) scale(0.97);
+      transition: transform 0.8s ease, opacity 0.8s ease, box-shadow 0.4s ease;
+      overflow: hidden;
+    }
+
+    .slide::before {
+      content: "";
+      position: absolute;
+      inset: -18% 58% auto -18%;
+      height: 55%;
+      background: linear-gradient(140deg, rgba(139,92,246,0.28), transparent 70%);
+      transform: rotate(-15deg);
+      filter: blur(10px);
+      pointer-events: none;
+    }
+
+    .slide.active {
+      opacity: 1;
+      pointer-events: auto;
+      transform: translate3d(0, 0, 0) rotateY(0deg) scale(1);
+      box-shadow: 0 28px 80px rgba(0,0,0,.52), inset 0 0 25px rgba(255,255,255,0.03);
+    }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      padding: 0.45rem 1rem;
+      border-radius: 999px;
+      border: 1px solid rgba(168,85,247,0.45);
+      background: rgba(168,85,247,0.08);
+      color: #f0e7ff;
+      font-size: 0.82rem;
+      font-weight: 700;
+      margin-bottom: 1.2rem;
+      letter-spacing: 0.01em;
+    }
+
+    h1,h2,h3,p,ul,li { margin: 0; }
+
+    h1 {
+      font-size: clamp(2.2rem, 4vw, 4.8rem);
+      line-height: 1.24;
+      margin-bottom: 0.7rem;
+      font-weight: 900;
+      letter-spacing: -0.03em;
+    }
+
+    h2 {
+      font-size: clamp(1.7rem, 2.5vw, 3rem);
+      line-height: 1.3;
+      margin-bottom: 0.8rem;
+      font-weight: 800;
+    }
+
+    h3 {
+      font-size: clamp(1.12rem, 1.5vw, 1.55rem);
+      line-height: 1.5;
+      margin-bottom: 0.5rem;
+      font-weight: 800;
+      color: var(--ink);
+    }
+
+    p, li {
+      color: var(--muted);
+      font-size: clamp(0.95rem, 1.5vw, 1.3rem);
+      line-height: 1.9;
+    }
+
+    .sub {
+      color: rgba(233,239,255,.82);
+      margin-bottom: 1.3rem;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(180px,1fr));
+      gap: 1.15rem;
+      margin-top: 1.4rem;
+    }
+
+    .row {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0,1fr));
+      gap: 1.15rem;
+      margin-top: 1.3rem;
+    }
+
+    .card {
+      position: relative;
+      background: rgba(255,255,255,0.025);
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      padding: 1.2rem 1.15rem;
+      min-height: 170px;
+      z-index: 1;
+    }
+
+    .icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 14px;
+      display: grid;
+      place-items: center;
+      margin-bottom: 0.8rem;
+      font-weight: 800;
+      color: white;
+      background: linear-gradient(135deg, var(--purple), var(--blue));
+      box-shadow: 0 12px 28px rgba(139,92,246,0.32);
+    }
+
+    .names {
+      list-style: none;
+      padding: 0;
+      margin: 1rem 0 0;
+      display: grid;
+      grid-template-columns: repeat(2, minmax(160px,1fr));
+      gap: 0.5rem 1.2rem;
+    }
+
+    .names li::before {
+      content: "◉ ";
+      color: var(--purple);
+      font-weight: 800;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(160px,1fr));
+      gap: 0.9rem;
+      margin-top: 1.4rem;
+    }
+
+    .stat {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 18px;
+      padding: 1rem;
+      text-align: center;
+    }
+
+    .stat strong {
+      display: block;
+      font-size: clamp(1.4rem, 2vw, 2.2rem);
+      color: #fff;
+      margin-bottom: 0.3rem;
+    }
+
+    .code-block {
+      direction: ltr;
+      text-align: left;
+      background: rgba(10, 12, 22, 0.92);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 18px;
+      padding: 1.1rem 1.2rem;
+      color: #def3ff;
+      font: 0.85rem/1.8 "Consolas", "Courier New", monospace;
+      white-space: pre-wrap;
+      margin-top: 1.2rem;
+      box-shadow: inset 0 0 18px rgba(255,255,255,0.02);
+    }
+
+    .code-block .kw { color: #a78bfa; }
+    .code-block .fn { color: #7dd3fc; }
+    .code-block .str { color: #fbbf24; }
+    .code-block .cm { color: #86efac; }
+
+    .nav {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 20px;
+      z-index: 5;
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    .nav button {
+      width: 12px;
+      height: 12px;
+      border: 0;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.35);
+      cursor: pointer;
+      transition: all 0.3s ease;
+      padding: 0;
+    }
+
+    .nav button.active {
+      width: 36px;
+      background: linear-gradient(90deg, var(--purple), var(--blue));
+      box-shadow: 0 0 20px rgba(139,92,246,0.7);
+    }
+
+    .nav button:focus-visible {
+      outline: 2px solid rgba(139,92,246,0.9);
+      outline-offset: 3px;
+    }
+
+    @media (max-width: 920px) {
+      .slide {
+        width: min(92vw, 700px);
+        min-height: 72vh;
+      }
+      .grid, .row, .stats, .names {
+        grid-template-columns: 1fr;
+      }
+      .slide h1 { font-size: 2.4rem; }
+      .slide h2 { font-size: 1.9rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="scene">
+    <canvas id="bg"></canvas>
+
+    <div class="slides">
+      <section class="slide active">
+        <div class="tag">بحث علمي • لغات البرمجة</div>
+        <h1>لغة البرمجة Julia</h1>
+        <p class="sub">الجمع بين سرعة C وسهولة Python في الحوسبة العلمية والبيانات</p>
+
+        <div class="row">
+          <div class="card">
+            <h3>أسماء المشاركين</h3>
+            <ul class="names">
+              <li>منة السيد إبراهيم</li>
+              <li>كنزي شريف حمادة</li>
+              <li>فاطمة محمد عز</li>
+              <li>عبد الله نبيل النجار</li>
+              <li>رهف هيثم موسى</li>
+              <li>عمرو عبد السلام أحمد</li>
+              <li>ياسمين محمد عبد الحميد</li>
+            </ul>
+          </div>
+
+          <div class="card">
+            <h3>تحت إشراف</h3>
+            <p>د. علي محرز</p>
+          </div>
+
+          <div class="card">
+            <h3>مجال البحث</h3>
+            <p>الحوسبة عالية الأداء، برمجة علمية، وتحليل البيانات</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="slide">
+        <div class="tag">مقدمة</div>
+        <h2>ما هي لغة Julia؟</h2>
+        <p class="sub">لغة حديثة تم تصميمها للحوسبة العددية، حل المشكلات العلمية، ومعالجة البيانات الضخمة</p>
+
+        <div class="grid">
+          <div class="card">
+            <div class="icon">&lt;/&gt;</div>
+            <h3>لغة عالية المستوى</h3>
+            <p>بنية واضحة، كتابة سهلة، وقرب من لغات البرمجة العلمية والبحثية.</p>
+          </div>
+
+          <div class="card">
+            <div class="icon">∑</div>
+            <h3>مخصصة للحوسبة</h3>
+            <p>مناسبة للمعادلات الرياضية، المحاكاة، النمذجة، والذكاء الاصطناعي.</p>
+          </div>
+
+          <div class="card">
+            <div class="icon">⚡</div>
+            <h3>الأداء العالي</h3>
+            <p>تستخدم JIT compilation لتحسين الأداء أثناء التنفيذ بشكل مستمر.</p>
+          </div>
+
+          <div class="card">
+            <div class="icon">◎</div>
+            <h3>مفتوحة المصدر</h3>
+            <p>مجتمع كبير، ومكتبات واسعة في الفيزياء، الاقتصاد، والذكاء الاصطناعي.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="slide">
+        <div class="tag">المشكلة</div>
+        <h2>مشكلة اللغتين (Two-Language Problem)</h2>
+        <p class="sub">التحدي التقليدي الذي جاءت Julia لحله</p>
+
+        <div class="grid">
+          <div class="card">
+            <h3>Python / R</h3>
+            <p>سهلة الكتابة، لكنها أبطأ عند الحسابات المعقدة والمتكررة.</p>
+          </div>
+
+          <div class="card">
+            <h3>C / C++</h3>
+            <p>سريعة جدًا، لكنها أكثر تعقيدًا وتستغرق وقتًا أطول في التطوير.</p>
+          </div>
+        </div>
+
+        <div class="card" style="margin-top:1.2rem;">
+          <h3>حل Julia</h3>
+          <p>تجمع بين سهولة التعلم وسرعة التنفيذ، مما يمنح المطور لغة واحدة لتطوير النموذج ثم تشغيله مباشرة بكفاءة عالية.</p>
+        </div>
+      </section>
+
+      <section class="slide">
+        <div class="tag">الأساس</div>
+        <h2>الركائز الأساسية لـ Julia</h2>
+        <p class="sub">أهم المكونات التي تمنحها القوة والأداء والمرونة</p>
+
+        <div class="row">
+          <div class="card">
+            <div class="icon">JIT</div>
+            <h3>مترجم JIT</h3>
+            <p>يُحسن التنفيذ بشكل فوري ويصل بالكود إلى أداء قريب من اللغات منخفضة المستوى.</p>
+          </div>
+
+          <div class="card">
+            <div class="icon">⇄</div>
+            <h3>التوجيه المتعدد</h3>
+            <p>يحدد سلوك الدالة بناءً على أنواع جميع الوسائط المدخلة، وهو ميزة فريدة.</p>
+          </div>
+
+          <div class="card">
+            <div class="icon">∫</div>
+            <h3>الرياضيات المتقدمة</h3>
+            <p>دعم مباشر للمصفوفات، المعادلات، والعمليات العددية المعقدة.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="slide">
+        <div class="tag">الميزة البارزة</div>
+        <h2>التوجيه المتعدد (Multiple Dispatch)</h2>
+        <p class="sub">القلب النابض في هندسة Julia البرمجية</p>
+
+        <div class="card">
+          <h3>لماذا هذا مهم؟</h3>
+          <ul>
+            <li>يحدد السلوك وفقًا لنوع المعاملات في كل مرة.</li>
+            <li>يقلل الحاجة إلى كتابة حلول متكررة ومختلفة لكل نوع بيانات.</li>
+            <li>يسمح بتركيب المكتبات المختلفة بسهولة واقتصاد في الأداء.</li>
+          </ul>
+        </div>
+
+        <div class="code-block"><span class="cm"># مثال على Multiple Dispatch</span>
+<span class="kw">combine</span>(x::<span class="kw">Int</span>, y::<span class="kw">Int</span>) = x + y
+<span class="kw">combine</span>(x::<span class="kw">String</span>, y::<span class="kw">String</span>) = x * y
+<span class="fn">combine</span>(<span class="str">5</span>, <span class="str">10</span>)          <span class="cm"># 15</span>
+<span class="fn">combine</span>(<span class="str">"Julia"</span>, <span class="str">" Lang"</span>) <span class="cm"># "Julia Lang"</span>
+        </div>
+      </section>
+
+      <section class="slide">
+        <div class="tag">الأداء</div>
+        <h2>مقارنة الأداء والسرعة</h2>
+        <p class="sub">أقل قيمة تعني زمن تنفيذ أسرع</p>
+
+        <div class="stats">
+          <div class="stat"><strong>1.0x</strong><span>C</span></div>
+          <div class="stat"><strong>1.1x</strong><span>Julia</span></div>
+          <div class="stat"><strong>~20x</strong><span>Python</span></div>
+        </div>
+
+        <div class="card" style="margin-top:1.2rem;">
+          <h3>الاستنتاج</h3>
+          <p>Julia قريبة جدًا من أداء C في كثير من التطبيقات الحسابية، وتتفوق على Python في الأداء عندما تكون العمليات كثيفة الحوسبة.</p>
+        </div>
+      </section>
+
+      <section class="slide">
+        <div class="tag">التكامل</div>
+        <h2>التكامل مع اللغات الأخرى</h2>
+        <p class="sub">دعم الاتصال بالمكتبات الخارجية دون خسارة الأداء</p>
+
+        <div class="grid">
+          <div class="card">
+            <div class="icon">Py</div>
+            <h3>PyCall</h3>
+            <p>استدعاء مكتبات Python مثل NumPy وPandas مباشرة داخل Julia.</p>
+          </div>
+
+          <div class="card">
+            <div class="icon">C</div>
+            <h3>استدعاء C</h3>
+            <p>ربط الرسوميات والمكتبات منخفضة المستوى بطريقة مباشرة وفعالة.</p>
+          </div>
+
+          <div class="card">
+            <div class="icon">R</div>
+            <h3>RCall</h3>
+            <p>تكامل مع الحزم الإحصائية في R لأعمال التحليل المتقدم.</p>
+          </div>
+
+          <div class="card">
+            <div class="icon">ML</div>
+            <h3>مكتبات الذكاء</h3>
+            <p>Flux.jl وDifferentialEquations.jl وJuMP.jl تعزز استخدام Julia في البحث العلمي.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="slide">
+        <div class="tag">النظام البيئي</div>
+        <h2>المكتبات والخدمات المتخصصة</h2>
+        <p class="sub">أبرز المكتبات التي جعلت Julia لغة قوية في العلوم والتطبيقات الحديثة</p>
+
+        <div class="row">
+          <div class="card">
+            <h3>DiffEq</h3>
+            <p>DifferentialEquations.jl: لحل المعادلات التفاضلية بشكل متقدم.</p>
+          </div>
+
+          <div class="card">
+            <h3>JuMP</h3>
+            <p>نمذجة المشكلات الأمثلية والتحسين الرياضي في بيئة سهلة.</p>
+          </div>
+
+          <div class="card">
+            <h3>Flux</h3>
+            <p>Flux.jl: لبناء الشبكات العصبية وتعلم الآلة بسرعة وكفاءة.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="slide">
+        <div class="tag">التطبيقات</div>
+        <h2>المجالات والتطبيقات العملية</h2>
+        <p class="sub">أين تُستخدم Julia في الصناعة والبحث العلمي؟</p>
+
+        <div class="grid">
+          <div class="card">
+            <h3>1. الذكاء الاصطناعي</h3>
+            <p>التعلم العميق، النمذجة التنبؤية، وتحليل البيانات الضخمة.</p>
+          </div>
+
+          <div class="card">
+            <h3>2. الفيزياء</h3>
+            <p>محاكاة الأنظمة الفيزيائية، الفلك، وعلم الفضاء.</p>
+          </div>
+
+          <div class="card">
+            <h3>3. المالية</h3>
+            <p>حساب المخاطر، تحليل السوق، والنمذجة الاقتصادية.</p>
+          </div>
+
+          <div class="card">
+            <h3>4. الهندسة والكيمياء</h3>
+            <p>محاكاة التفاعلات الكيميائية، علم الأحياء، والتصاميم الصناعية.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="slide">
+        <div class="tag">الخاتمة</div>
+        <h1>شكراً لحسن استماعكم</h1>
+        <p class="sub">لغة Julia تمثل الجيل القادم من لغات البرمجة الموجهة للحوسبة العلمية والرقمية</p>
+
+        <div class="card" style="margin-top:1rem;">
+          <h3>الملخص</h3>
+          <p>Julia تجمع بين سهولة Python وسرعة C، وتمنح الباحثين والمطورين أداة قوية للتجارب المعقدة، والمحاكاة، والذكاء الاصطناعي، وتطبيقات الحوسبة العلمية المتقدمة.</p>
+        </div>
+      </section>
+    </div>
+
+    <div class="nav" id="nav"></div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/three@0.160.1/build/three.min.js"></script>
+  <script>
+    const slides = [...document.querySelectorAll('.slide')];
+    const nav = document.getElementById('nav');
+    let current = 0;
+
+    slides.forEach((slide, index) => {
+      const btn = document.createElement('button');
+      btn.setAttribute('aria-label', `Slide ${index + 1}`);
+      btn.addEventListener('click', () => showSlide(index));
+      nav.appendChild(btn);
+    });
+
+    function showSlide(index) {
+      current = (index + slides.length) % slides.length;
+      slides.forEach((slide, i) => {
+        slide.classList.toggle('active', i === current);
+      });
+      [...nav.children].forEach((btn, i) => {
+        btn.classList.toggle('active', i === current);
+      });
+    }
+
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'ArrowRight' || event.key === ' ') {
+        showSlide(current + 1);
+      }
+      if (event.key === 'ArrowLeft') {
+        showSlide(current - 1);
+      }
+    });
+
+    let touchStartX = 0;
+    document.addEventListener('touchstart', (event) => {
+      touchStartX = event.touches[0].clientX;
+    }, { passive: true });
+
+    document.addEventListener('touchend', (event) => {
+      const delta = event.changedTouches[0].clientX - touchStartX;
+      if (Math.abs(delta) > 50) {
+        showSlide(current + (delta < 0 ? 1 : -1));
+      }
+    });
+
+    showSlide(0);
+
+    const canvas = document.getElementById('bg');
+    const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 100);
+    camera.position.z = 16;
+
+    const ambient = new THREE.AmbientLight(0xffffff, 1.2);
+    scene.add(ambient);
+
+    const pointLight = new THREE.PointLight(0x8b5cf6, 2.5, 100);
+    pointLight.position.set(6, 4, 10);
+    scene.add(pointLight);
+
+    const secondary = new THREE.PointLight(0x38bdf8, 1.8, 100);
+    secondary.position.set(-6, -3, 10);
+    scene.add(secondary);
+
+    const group = new THREE.Group();
+    scene.add(group);
+
+    const colors = [0x8b5cf6, 0x38bdf8, 0x34d399, 0xf87171];
+    const spheres = [];
+
+    colors.forEach((color, index) => {
+      const material = new THREE.MeshStandardMaterial({
+        color,
+        emissive: color,
+        emissiveIntensity: 0.18,
+        metalness: 0.4,
+        roughness: 0.35
+      });
+      const mesh = new THREE.Mesh(new THREE.SphereGeometry(1.1 + index * 0.18, 28, 28), material);
+      mesh.position.set((index - 1.5) * 2.4, (index % 2 === 0 ? 1 : -1) * 1.7, -2.8);
+      group.add(mesh);
+      spheres.push(mesh);
+    });
+
+    const torus = new THREE.Mesh(
+      new THREE.TorusGeometry(4.2, 0.065, 18, 220),
+      new THREE.MeshStandardMaterial({
+        color: 0xf3f4f6,
+        emissive: 0x8b5cf6,
+        emissiveIntensity: 0.24,
+        metalness: 0.8,
+        roughness: 0.2
+      })
+    );
+    torus.rotation.x = 1.2;
+    torus.rotation.y = 0.7;
+    group.add(torus);
+
+    const torus2 = torus.clone();
+    torus2.scale.setScalar(0.72);
+    torus2.rotation.x = 0.5;
+    torus2.rotation.z = 1.15;
+    group.add(torus2);
+
+    const starGeometry = new THREE.BufferGeometry();
+    const starCount = 1800;
+    const positions = new Float32Array(starCount * 3);
+
+    for (let i = 0; i < starCount * 3; i += 3) {
+      positions[i] = (Math.random() - 0.5) * 26;
+      positions[i + 1] = (Math.random() - 0.5) * 20;
+      positions[i + 2] = (Math.random() - 0.5) * 18;
+    }
+
+    starGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    const stars = new THREE.Points(
+      starGeometry,
+      new THREE.PointsMaterial({
+        color: 0xffffff,
+        size: 0.06,
+        transparent: true,
+        opacity: 0.8
+      })
+    );
+    scene.add(stars);
+
+    function resize() {
+      renderer.setSize(window.innerWidth, window.innerHeight, false);
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+    }
+
+    window.addEventListener('resize', resize);
+    resize();
+
+    function animate() {
+      requestAnimationFrame(animate);
+      const t = performance.now() * 0.001;
+
+      group.rotation.y = t * 0.38;
+      group.rotation.x = Math.sin(t * 0.8) * 0.3;
+      torus.rotation.z = t * 1.25;
+      torus2.rotation.z = -t * 1.15;
+
+      spheres.forEach((mesh, index) => {
+        mesh.position.y += Math.sin(t * 1.4 + index) * 0.004;
+      });
+
+      stars.rotation.y = t * 0.04;
+      stars.rotation.x = t * 0.03;
+
+      renderer.render(scene, camera);
+    }
+
+    animate();
+  </script>
+</body>
+</html>
